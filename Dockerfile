@@ -44,6 +44,16 @@ RUN if [ -n "$OPENCLAW_INSTALL_BROWSER" ]; then \
       rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*; \
     fi
 
+## Install GitHub CLI (gh) for the github skill
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+      | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+ && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+      > /etc/apt/sources.list.d/github-cli.list \
+ && apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends gh jq \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+
 USER node
 COPY --chown=node:node . .
 RUN pnpm build

@@ -213,6 +213,7 @@ export async function resolveSlackMedia(params: {
           fetchImpl,
           filePathHint: file.name,
           maxBytes: params.maxBytes,
+          ssrfPolicy: { allowedHostnames: ["files.slack.com"] },
         });
         if (fetched.buffer.byteLength > params.maxBytes) {
           return null;
@@ -223,6 +224,7 @@ export async function resolveSlackMedia(params: {
           effectiveMime,
           "inbound",
           params.maxBytes,
+          file.name,
         );
         const label = fetched.fileName ?? file.name;
         const contentType = effectiveMime ?? saved.contentType;
@@ -276,6 +278,7 @@ export async function resolveSlackAttachmentContent(params: {
         const fetched = await fetchRemoteMedia({
           url: imageUrl,
           maxBytes: params.maxBytes,
+          ssrfPolicy: { allowedHostnames: ["files.slack.com"] },
         });
         if (fetched.buffer.byteLength <= params.maxBytes) {
           const saved = await saveMediaBuffer(
@@ -283,6 +286,7 @@ export async function resolveSlackAttachmentContent(params: {
             fetched.contentType,
             "inbound",
             params.maxBytes,
+            fetched.fileName ?? undefined,
           );
           const label = fetched.fileName ?? "forwarded image";
           allMedia.push({

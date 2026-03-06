@@ -2,15 +2,26 @@ services:
   openclaw-gateway:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
     environment:
+      TZ: Asia/Shanghai
       HOME: /home/node
       TERM: xterm-256color
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
-      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY}
-      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY}
-      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE}
+      GH_TOKEN: ${GH_TOKEN}
+      SLACK_APP_TOKEN: ${SLACK_APP_TOKEN}
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
+      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
+      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
+      OPENCLAW_CACHE_TRACE: ${OPENCLAW_CACHE_TRACE}
+      NODE_OPTIONS: "--dns-result-order=ipv4first"
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
       - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
+      - /Users/jerrycai/Documents/git/docs:/home/node/juicefs-docs
+      - /Users/jerrycai/Documents/git/jfs:/home/node/juicefs-code/jfs
+      - /Users/jerrycai/Documents/git/juicefs:/home/node/juicefs-code/juicefs
+      - /Users/jerrycai/Documents/git/juicefs-csi-driver:/home/node/juicefs-code/juicefs-csi-driver
+      - /Users/jerrycai/Documents/MyNote:/home/node/.openclaw/workspace/mynote:ro
     ports:
       - "${OPENCLAW_GATEWAY_PORT:-18789}:18789"
       - "${OPENCLAW_BRIDGE_PORT:-18790}:18790"
@@ -29,17 +40,31 @@ services:
 
   openclaw-cli:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     environment:
+      TZ: Asia/Shanghai
       HOME: /home/node
       TERM: xterm-256color
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
+      GH_TOKEN: ${GH_TOKEN}
+      SLACK_APP_TOKEN: ${SLACK_APP_TOKEN}
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
       BROWSER: echo
-      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY}
-      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY}
-      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE}
+      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
+      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
+      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
+      OPENCLAW_CACHE_TRACE: ${OPENCLAW_CACHE_TRACE}
+      NODE_OPTIONS: "--dns-result-order=ipv4first"
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
       - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
+      - /Users/jerrycai/Documents/git/docs:/home/node/juicefs-docs
+      - /Users/jerrycai/Documents/git/jfs:/home/node/juicefs-code/jfs
+      - /Users/jerrycai/Documents/git/juicefs:/home/node/juicefs-code/juicefs
+      - /Users/jerrycai/Documents/git/juicefs-csi-driver:/home/node/juicefs-code/juicefs-csi-driver
+      - /Users/jerrycai/Documents/MyNote:/home/node/.openclaw/workspace/mynote:ro
     stdin_open: true
     tty: true
     init: true
