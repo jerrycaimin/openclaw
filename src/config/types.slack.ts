@@ -77,6 +77,8 @@ export type SlackThreadConfig = {
   inheritParent?: boolean;
   /** Maximum number of thread messages to fetch as context when starting a new thread session (default: 20). Set to 0 to disable thread history fetching. */
   initialHistoryLimit?: number;
+  /** Override initialHistoryLimit for DM threads (default: same as initialHistoryLimit). Set to 0 to disable history in DMs only. */
+  dmInitialHistoryLimit?: number;
 };
 
 export type SlackAccountConfig = {
