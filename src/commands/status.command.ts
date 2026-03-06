@@ -87,6 +87,7 @@ export async function statusCommand(
   const securityAudit = opts.json
     ? await runSecurityAudit({
         config: scan.cfg,
+        sourceConfig: scan.sourceConfig,
         deep: false,
         includeFilesystem: true,
         includeChannelSecurity: true,
@@ -100,6 +101,7 @@ export async function statusCommand(
         async () =>
           await runSecurityAudit({
             config: scan.cfg,
+            sourceConfig: scan.sourceConfig,
             deep: false,
             includeFilesystem: true,
             includeChannelSecurity: true,

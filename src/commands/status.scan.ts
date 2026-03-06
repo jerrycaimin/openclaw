@@ -125,6 +125,7 @@ async function resolveChannelsStatus(params: {
 
 export type StatusScanResult = {
   cfg: ReturnType<typeof loadConfig>;
+  sourceConfig: ReturnType<typeof loadConfig>;
   secretDiagnostics: string[];
   osSummary: ReturnType<typeof resolveOsSummary>;
   tailscaleMode: string;
@@ -239,6 +240,7 @@ async function scanStatusJsonFast(opts: {
 
   return {
     cfg,
+    sourceConfig: loadedRaw,
     secretDiagnostics,
     osSummary,
     tailscaleMode,
@@ -368,6 +370,7 @@ export async function scanStatus(
 
       return {
         cfg,
+        sourceConfig: loadedRaw,
         secretDiagnostics,
         osSummary,
         tailscaleMode,

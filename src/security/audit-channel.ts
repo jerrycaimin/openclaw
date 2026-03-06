@@ -1,6 +1,8 @@
+import { hasConfiguredUnavailableCredentialStatus } from "../channels/account-snapshot-fields.js";
 import { resolveChannelDefaultAccountId } from "../channels/plugins/helpers.js";
 import type { listChannelPlugins } from "../channels/plugins/index.js";
 import type { ChannelId } from "../channels/plugins/types.js";
+import { inspectReadOnlyChannelAccount } from "../channels/read-only-account-inspect.js";
 import {
   isNumericTelegramUserId,
   normalizeTelegramAllowFromEntry,
@@ -113,9 +115,74 @@ function hasExplicitProviderAccountConfig(
 
 export async function collectChannelSecurityFindings(params: {
   cfg: OpenClawConfig;
+  sourceConfig?: OpenClawConfig;
   plugins: ReturnType<typeof listChannelPlugins>;
 }): Promise<SecurityAuditFinding[]> {
   const findings: SecurityAuditFinding[] = [];
+  const sourceConfig = params.sourceConfig ?? params.cfg;
+
+  const inspectChannelAccount = (
+    plugin: (typeof params.plugins)[number],
+    cfg: OpenClawConfig,
+    accountId: string,
+  ) =>
+    plugin.config.inspectAccount?.(cfg, accountId) ??
+    inspectReadOnlyChannelAccount({
+      channelId: plugin.id,
+      cfg,
+      accountId,
+    });
+
+  const asAccountRecord = (value: unknown): Record<string, unknown> | null =>
+    value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : null;
+
+  const hasResolvedCredentialValue = (account: unknown): boolean => {
+    const record = asAccountRecord(account);
+    if (!record) {
+      return false;
+    }
+    return (
+      ["token", "botToken", "appToken", "userToken"].some((key) => {
+        const value = record[key];
+        return typeof value === "string" && value.trim().length > 0;
+      }) ||
+      ["tokenStatus", "botTokenStatus", "appTokenStatus", "userTokenStatus"].some(
+        (key) => record[key] === "available",
+      )
+    );
+  };
+
+  const resolveChannelAuditAccount = async (
+    plugin: (typeof params.plugins)[number],
+    accountId: string,
+  ) => {
+    const sourceInspectedAccount = inspectChannelAccount(plugin, sourceConfig, accountId);
+    const resolvedInspectedAccount = inspectChannelAccount(plugin, params.cfg, accountId);
+    const resolvedAccount =
+      resolvedInspectedAccount ?? plugin.config.resolveAccount(params.cfg, accountId);
+    const account =
+      sourceInspectedAccount &&
+      hasConfiguredUnavailableCredentialStatus(sourceInspectedAccount) &&
+      !hasResolvedCredentialValue(resolvedAccount)
+        ? sourceInspectedAccount
+        : resolvedAccount;
+    const accountRecord = asAccountRecord(account);
+    const enabled =
+      typeof accountRecord?.enabled === "boolean"
+        ? accountRecord.enabled
+        : plugin.config.isEnabled
+          ? plugin.config.isEnabled(account, params.cfg)
+          : true;
+    const configured =
+      typeof accountRecord?.configured === "boolean"
+        ? accountRecord.configured
+        : plugin.config.isConfigured
+          ? await plugin.config.isConfigured(account, params.cfg)
+          : true;
+    return { account, enabled, configured };
+  };
 
   const coerceNativeSetting = (value: unknown): boolean | "auto" | undefined => {
     if (value === true) {
@@ -197,28 +264,24 @@ export async function collectChannelSecurityFindings(params: {
     if (!plugin.security) {
       continue;
     }
-    const accountIds = plugin.config.listAccountIds(params.cfg);
+    const accountIds = plugin.config.listAccountIds(sourceConfig);
     const defaultAccountId = resolveChannelDefaultAccountId({
       plugin,
-      cfg: params.cfg,
+      cfg: sourceConfig,
       accountIds,
     });
     const orderedAccountIds = Array.from(new Set([defaultAccountId, ...accountIds]));
 
     for (const accountId of orderedAccountIds) {
       const hasExplicitAccountPath = hasExplicitProviderAccountConfig(
-        params.cfg,
+        sourceConfig,
         plugin.id,
         accountId,
       );
-      const account = plugin.config.resolveAccount(params.cfg, accountId);
-      const enabled = plugin.config.isEnabled ? plugin.config.isEnabled(account, params.cfg) : true;
+      const { account, enabled, configured } = await resolveChannelAuditAccount(plugin, accountId);
       if (!enabled) {
         continue;
       }
-      const configured = plugin.config.isConfigured
-        ? await plugin.config.isConfigured(account, params.cfg)
-        : true;
       if (!configured) {
         continue;
       }

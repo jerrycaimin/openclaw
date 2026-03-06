@@ -191,20 +191,5 @@ export function projectSafeChannelAccountSnapshotFields(
       : {}),
     ...(readTrimmedString(record, "dbPath") ? { dbPath: readTrimmedString(record, "dbPath") } : {}),
     ...(readNumber(record, "port") !== undefined ? { port: readNumber(record, "port") } : {}),
-    ...(readTrimmedString(record, "audienceType")
-      ? { audienceType: readTrimmedString(record, "audienceType") }
-      : {}),
-    ...(readTrimmedString(record, "audience")
-      ? { audience: readTrimmedString(record, "audience") }
-      : {}),
-    ...(readTrimmedString(record, "webhookPath")
-      ? { webhookPath: readTrimmedString(record, "webhookPath") }
-      : {}),
-    ...(readTrimmedString(record, "webhookUrl")
-      ? { webhookUrl: readTrimmedString(record, "webhookUrl") }
-      : {}),
-    ...(readTrimmedString(record, "publicKey")
-      ? { publicKey: readTrimmedString(record, "publicKey") }
-      : {}),
   };
 }

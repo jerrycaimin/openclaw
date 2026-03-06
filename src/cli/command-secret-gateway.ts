@@ -414,11 +414,18 @@ export async function resolveCommandSecretRefsViaGateway(params: {
         preflightDiagnostics: preflight.diagnostics,
         mode,
       });
+      const recoveredLocally = Object.values(fallback.targetStatesByPath).some(
+        (state) => state === "resolved_local",
+      );
+      const fallbackMessage =
+        recoveredLocally && !fallback.hadUnresolvedTargets
+          ? "resolved command secrets locally."
+          : "attempted local command-secret resolution.";
       return {
         resolvedConfig: fallback.resolvedConfig,
         diagnostics: dedupeDiagnostics([
           ...fallback.diagnostics,
-          `${params.commandName}: gateway secrets.resolve unavailable (${describeUnknownError(err)}); resolved command secrets locally.`,
+          `${params.commandName}: gateway secrets.resolve unavailable (${describeUnknownError(err)}); ${fallbackMessage}`,
         ]),
         targetStatesByPath: fallback.targetStatesByPath,
         hadUnresolvedTargets: fallback.hadUnresolvedTargets,

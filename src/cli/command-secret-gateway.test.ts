@@ -139,6 +139,9 @@ describe("resolveCommandSecretRefsViaGateway", () => {
       expect(
         result.diagnostics.some((entry) => entry.includes("gateway secrets.resolve unavailable")),
       ).toBe(true);
+      expect(
+        result.diagnostics.some((entry) => entry.includes("resolved command secrets locally")),
+      ).toBe(true);
     } finally {
       if (priorValue === undefined) {
         delete process.env.TALK_API_KEY;
@@ -496,6 +499,11 @@ describe("resolveCommandSecretRefsViaGateway", () => {
       expect(result.resolvedConfig.talk?.apiKey).toBeUndefined();
       expect(result.hadUnresolvedTargets).toBe(true);
       expect(result.targetStatesByPath["talk.apiKey"]).toBe("unresolved");
+      expect(
+        result.diagnostics.some((entry) =>
+          entry.includes("attempted local command-secret resolution"),
+        ),
+      ).toBe(true);
     } finally {
       if (priorValue === undefined) {
         delete process.env[envKey];
