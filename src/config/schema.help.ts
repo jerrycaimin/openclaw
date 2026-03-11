@@ -691,6 +691,18 @@ export const FIELD_HELP: Record<string, string> = {
   "tools.web.fetch.firecrawl.maxAgeMs":
     "Firecrawl maxAge (ms) for cached results when supported by the API.",
   "tools.web.fetch.firecrawl.timeoutSeconds": "Timeout in seconds for Firecrawl requests.",
+  "tools.web.fetch.ssrfPolicy":
+    "SSRF guardrail settings for web_fetch. Useful when running in Docker or behind a TUN-mode proxy (e.g. Clash Pro) that routes traffic through private or RFC 2544 benchmark IP ranges.",
+  "tools.web.fetch.ssrfPolicy.allowPrivateNetwork":
+    "Legacy alias for tools.web.fetch.ssrfPolicy.dangerouslyAllowPrivateNetwork. Prefer the dangerously-named key so risk intent is explicit.",
+  "tools.web.fetch.ssrfPolicy.dangerouslyAllowPrivateNetwork":
+    "Allow web_fetch to reach private/internal network addresses (e.g. 192.168.x.x, 10.x.x.x). Enable when running in Docker/VM with host-network access. Implies allowRfc2544BenchmarkRange.",
+  "tools.web.fetch.ssrfPolicy.allowRfc2544BenchmarkRange":
+    "Allow web_fetch to reach 198.18.0.0/15 addresses. Required when using Clash Pro or similar TUN-mode proxies that assign fake IPs from this RFC 2544 benchmark range.",
+  "tools.web.fetch.ssrfPolicy.allowedHostnames":
+    "Hostnames (or IPs) exempt from SSRF blocking for web_fetch. Supports wildcard subdomain patterns like *.example.com.",
+  "tools.web.fetch.ssrfPolicy.hostnameAllowlist":
+    "Restrict web_fetch to only these hostnames. When set, requests to any hostname not matching the list are blocked.",
   models:
     "Model catalog root for provider definitions, merge/replace behavior, and optional Bedrock discovery integration. Keep provider definitions explicit and validated before relying on production failover paths.",
   "models.mode":
