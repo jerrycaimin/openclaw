@@ -508,6 +508,21 @@ export type ToolsConfig = {
       userAgent?: string;
       /** Use Readability to extract main content (default: true). */
       readability?: boolean;
+      ssrfPolicy?: {
+        /** Legacy alias for dangerouslyAllowPrivateNetwork. */
+        allowPrivateNetwork?: boolean;
+        /** Allow web_fetch to reach private/internal network addresses (e.g. 192.168.x.x). */
+        dangerouslyAllowPrivateNetwork?: boolean;
+        /**
+         * Allow web_fetch to reach 198.18.0.0/15 addresses (RFC 2544 benchmark range).
+         * Required when using Clash Pro or similar TUN-mode proxies that use fake IPs.
+         */
+        allowRfc2544BenchmarkRange?: boolean;
+        /** Hostnames exempt from SSRF blocking. Supports "*.example.com" wildcards. */
+        allowedHostnames?: string[];
+        /** Restrict web_fetch to only these hostnames. */
+        hostnameAllowlist?: string[];
+      };
       firecrawl?: {
         /** Enable Firecrawl fallback (default: true when apiKey is set). */
         enabled?: boolean;
