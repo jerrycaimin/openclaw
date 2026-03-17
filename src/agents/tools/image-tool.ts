@@ -406,6 +406,26 @@ export function createImageTool(options?: {
         const isFileUrl = /^file:/i.test(imageRaw);
         const isHttpUrl = /^https?:\/\//i.test(imageRaw);
         const isDataUrl = /^data:/i.test(imageRaw);
+
+        // Detect MiniMax internal CDN URLs. These are generated when MiniMax
+        // hosts uploaded images on its own OSS, but they expire quickly and are
+        // not accessible externally. The model should use the local file path
+        // from the `[media attached: ...]` context instead.
+        if (isHttpUrl && /minimax-algeng[^/]*\.oss-cn-/i.test(imageRaw)) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Cannot fetch image: the URL appears to be a MiniMax internal CDN URL (${imageRaw}). These URLs are ephemeral and not publicly accessible. Please use the local file path shown in the [media attached: ...] context instead (e.g. /home/node/.openclaw/media/inbound/<filename>).`,
+              },
+            ],
+            details: {
+              error: "minimax_internal_cdn_url",
+              image: imageRawInput,
+            },
+          };
+        }
+
         if (hasScheme && !looksLikeWindowsDrivePath && !isFileUrl && !isHttpUrl && !isDataUrl) {
           return {
             content: [

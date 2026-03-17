@@ -1,6 +1,5 @@
 node_modules
 **/node_modules/
-.env
 docker-compose.extra.yml
 dist
 pnpm-lock.yaml
@@ -19,6 +18,7 @@ ui/playwright-report/
 ui/test-results/
 packages/dashboard-next/.next/
 packages/dashboard-next/out/
+.env
 
 # Mise configuration files
 mise.toml

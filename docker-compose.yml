@@ -10,11 +10,17 @@ services:
       GH_TOKEN: ${GH_TOKEN}
       SLACK_APP_TOKEN: ${SLACK_APP_TOKEN}
       SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+      TAVILY_API_KEY: ${TAVILY_API_KEY:-}
+      GOG_ACCOUNT: ${GOG_ACCOUNT:-}
+      GOG_KEYRING_BACKEND: file
+      GOG_KEYRING_PASSWORD: ${GOG_KEYRING_PASSWORD:-}
+      XDG_CONFIG_HOME: /home/node/.openclaw/credentials
       CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
       OPENCLAW_CACHE_TRACE: ${OPENCLAW_CACHE_TRACE}
       NODE_OPTIONS: "--dns-result-order=ipv4first"
+      PATH: "/home/node/.openclaw/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
       - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
@@ -68,12 +74,18 @@ services:
       GH_TOKEN: ${GH_TOKEN}
       SLACK_APP_TOKEN: ${SLACK_APP_TOKEN}
       SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+      TAVILY_API_KEY: ${TAVILY_API_KEY:-}
+      GOG_ACCOUNT: ${GOG_ACCOUNT:-}
+      GOG_KEYRING_BACKEND: file
+      GOG_KEYRING_PASSWORD: ${GOG_KEYRING_PASSWORD:-}
+      XDG_CONFIG_HOME: /home/node/.openclaw/credentials
       BROWSER: echo
       CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
       OPENCLAW_CACHE_TRACE: ${OPENCLAW_CACHE_TRACE}
       NODE_OPTIONS: "--dns-result-order=ipv4first"
+      PATH: "/home/node/.openclaw/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
       - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
