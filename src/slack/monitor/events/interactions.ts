@@ -4,6 +4,7 @@ import { enqueueSystemEvent } from "../../../infra/system-events.js";
 import { authorizeSlackSystemEventSender } from "../auth.js";
 import type { SlackMonitorContext } from "../context.js";
 import { escapeSlackMrkdwn } from "../mrkdwn.js";
+import { dispatchForwardMessageShortcut } from "./shortcut-forward.js";
 import {
   registerModalLifecycleHandler,
   type ModalInputSummary,
@@ -636,6 +637,115 @@ export function registerSlackInteractionEvents(params: { ctx: SlackMonitorContex
       }
     },
   );
+
+  // Handle message shortcuts ("关联至应用") triggered from Slack's message action menu.
+  // Works over Socket Mode (WebSocket) — no public URL required.
+  if (typeof ctx.app.shortcut === "function") {
+    ctx.app.shortcut(
+      new RegExp(`^${OPENCLAW_ACTION_PREFIX}`),
+      async (args: { shortcut: unknown; ack: () => Promise<void>; body: unknown }) => {
+        const { shortcut, ack, body } = args;
+        await ack();
+
+        if (ctx.shouldDropMismatchedSlackEvent?.(body)) {
+          ctx.runtime.log?.(
+            "slack:shortcut drop message shortcut payload (mismatched app/team)",
+          );
+          return;
+        }
+
+        const typed = shortcut as {
+          type?: string;
+          callback_id?: string;
+          user?: { id?: string };
+          team?: { id?: string };
+          channel?: { id?: string };
+          trigger_id?: string;
+          message?: {
+            ts?: string;
+            thread_ts?: string;
+            text?: string;
+            user?: string;
+            username?: string;
+            files?: import("../../types.js").SlackFile[];
+            attachments?: import("../../types.js").SlackAttachment[];
+            blocks?: unknown[];
+          };
+        };
+
+        if (typed.type !== "message_action") {
+          return;
+        }
+
+        const callbackId = typed.callback_id ?? "unknown";
+        const userId = typed.user?.id ?? "unknown";
+        const channelId = typed.channel?.id;
+        const messageTs = typed.message?.ts;
+        const threadTs = typed.message?.thread_ts;
+        const messageText = typed.message?.text;
+
+        const auth = await authorizeSlackSystemEventSender({
+          ctx,
+          senderId: userId,
+          channelId,
+        });
+        if (!auth.allowed) {
+          ctx.runtime.log?.(
+            `slack:shortcut drop callbackId=${callbackId} user=${userId} channel=${channelId ?? "unknown"} reason=${auth.reason ?? "unauthorized"}`,
+          );
+          return;
+        }
+
+        ctx.runtime.log?.(
+          `slack:shortcut callbackId=${callbackId} user=${userId} channel=${channelId} messageTs=${messageTs}`,
+        );
+
+        // forward_message: use the full message object from the shortcut payload (which Slack
+        // includes in its entirety), call AI, and deliver the reply via DM.
+        if (callbackId === "openclaw:forward_message" && userId !== "unknown") {
+          dispatchForwardMessageShortcut({
+            ctx,
+            userId,
+            channelId,
+            messageTs,
+            threadTs,
+            payloadMessage: typed.message,
+          }).catch((err) => {
+            ctx.runtime.error?.(`slack:shortcut forward_message dispatch error: ${String(err)}`);
+          });
+          return;
+        }
+
+        // Generic shortcut: enqueue a system event so the active session's agent
+        // can react on its next turn.
+        const sessionKey = ctx.resolveSlackSystemEventSessionKey({
+          channelId,
+          channelType: auth.channelType,
+          senderId: userId,
+        });
+
+        const contextParts = ["slack:shortcut", channelId, messageTs, callbackId].filter(Boolean);
+        const contextKey = contextParts.join(":");
+
+        const eventPayload = {
+          interactionType: "message_shortcut" as const,
+          callbackId,
+          userId,
+          teamId: typed.team?.id,
+          triggerId: typed.trigger_id,
+          channelId,
+          messageTs,
+          threadTs,
+          messageText,
+        };
+
+        enqueueSystemEvent(formatSlackInteractionSystemEvent(eventPayload), {
+          sessionKey,
+          contextKey,
+        });
+      },
+    );
+  }
 
   if (typeof ctx.app.view !== "function") {
     return;

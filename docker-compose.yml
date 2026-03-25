@@ -1,6 +1,8 @@
 services:
   openclaw-gateway:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
+    group_add:
+      - "0"   # docker.sock inside the container is owned by GID 0 (root) on Docker Desktop
     environment:
       TZ: Asia/Shanghai
       HOME: /home/node
@@ -32,6 +34,7 @@ services:
       - /Users/jerrycai/Documents/git/juicefs:/home/node/juicefs-code/juicefs
       - /Users/jerrycai/Documents/git/juicefs-csi-driver:/home/node/juicefs-code/juicefs-csi-driver
       - /Users/jerrycai/Documents/MyNote:/home/node/.openclaw/workspace/mynote:ro
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "${OPENCLAW_GATEWAY_PORT:-18789}:18789"
       - "${OPENCLAW_BRIDGE_PORT:-18790}:18790"

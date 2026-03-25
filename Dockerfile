@@ -216,6 +216,11 @@ RUN --mount=type=cache,id=openclaw-bookworm-apt-cache,target=/var/cache/apt,shar
 RUN ln -sf /app/openclaw.mjs /usr/local/bin/openclaw \
  && chmod 755 /app/openclaw.mjs
 
+# Copy Docker CLI binary from official image (no apt-get needed).
+# Required when OPENCLAW_INSTALL_DOCKER_CLI=1 approach fails (e.g. network issues).
+# Mount /var/run/docker.sock in docker-compose to enable container spawning.
+COPY --from=docker:27-cli /usr/local/bin/docker /usr/local/bin/docker
+
 ENV NODE_ENV=production
 
 # Security hardening: Run as non-root user

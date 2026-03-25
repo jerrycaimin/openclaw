@@ -217,20 +217,31 @@ export async function readSlackMessages(
 
   // Use conversations.replies for thread messages, conversations.history for channel messages.
   if (opts.threadId) {
-    const result = await client.conversations.replies({
-      channel: channelId,
-      ts: opts.threadId,
-      limit: opts.limit,
-      latest: opts.before,
-      oldest: opts.after,
-    });
-    return {
-      // conversations.replies includes the parent message; drop it for replies-only reads.
-      messages: (result.messages ?? []).filter(
-        (message) => (message as SlackMessageSummary)?.ts !== opts.threadId,
-      ) as SlackMessageSummary[],
-      hasMore: Boolean(result.has_more),
-    };
+    try {
+      const result = await client.conversations.replies({
+        channel: channelId,
+        ts: opts.threadId,
+        limit: opts.limit,
+        latest: opts.before,
+        oldest: opts.after,
+      });
+      return {
+        // conversations.replies includes the parent message; drop it for replies-only reads.
+        messages: (result.messages ?? []).filter(
+          (message) => (message as SlackMessageSummary)?.ts !== opts.threadId,
+        ) as SlackMessageSummary[],
+        hasMore: Boolean(result.has_more),
+      };
+    } catch (err) {
+      // If the ts is not a thread root, fall back to channel history instead.
+      const errCode =
+        err && typeof err === "object" && "data" in err
+          ? (err as { data?: { error?: string } }).data?.error
+          : undefined;
+      if (errCode !== "thread_not_found") {
+        throw err;
+      }
+    }
   }
 
   const result = await client.conversations.history({
