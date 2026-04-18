@@ -26,6 +26,7 @@ services:
       OPENCLAW_CACHE_TRACE: ${OPENCLAW_CACHE_TRACE}
       NODE_OPTIONS: "--dns-result-order=ipv4first"
       PATH: "/home/node/.openclaw/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+      PYTHONPATH: "/home/node/.openclaw/py-packages"
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
       - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
@@ -42,13 +43,9 @@ services:
     restart: unless-stopped
     command:
       [
-        "node",
-        "dist/index.js",
-        "gateway",
-        "--bind",
-        "${OPENCLAW_GATEWAY_BIND:-lan}",
-        "--port",
-        "18789",
+        "sh",
+        "-c",
+        "mkdir -p /home/node/.openclaw/py-packages && (PYTHONPATH=/home/node/.openclaw/py-packages python3 -c 'import reportlab' 2>/dev/null || (curl -sS https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py && python3 /tmp/get-pip.py --target /home/node/.openclaw/py-packages -q --root-user-action=ignore && PYTHONPATH=/home/node/.openclaw/py-packages python3 -m pip install reportlab -q --target /home/node/.openclaw/py-packages --root-user-action=ignore)) && rm -rf ~/.lark-cli && ln -sf /home/node/.openclaw/lark-cli ~/.lark-cli && exec node dist/index.js gateway --bind ${OPENCLAW_GATEWAY_BIND:-lan} --port 18789",
       ]
     healthcheck:
       test:
