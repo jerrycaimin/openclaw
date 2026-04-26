@@ -96,6 +96,7 @@ services:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
       - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
       - /Users/jerrycai/Documents/git/docs:/home/node/juicefs-docs
+      - /Users/jerrycai/Documents/git/onpremise-docs:/home/node/juicefs-docs/onpremise-docs
       - /Users/jerrycai/Documents/git/jfs:/home/node/juicefs-code/jfs
       - /Users/jerrycai/Documents/git/juicefs:/home/node/juicefs-code/juicefs
       - /Users/jerrycai/Documents/git/juicefs-csi-driver:/home/node/juicefs-code/juicefs-csi-driver
